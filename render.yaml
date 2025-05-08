@@ -1,0 +1,18 @@
+services:
+  - type: worker
+    name: personalai-worker
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: R2_KEY
+        sync: false
+      - key: R2_SECRET_KEY
+        sync: false
+      - key: ENDPOINT_URL
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
