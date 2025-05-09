@@ -29,7 +29,7 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = MongoClient(MONGO_URI)
 db = client.personalAI
-queue = db.video_queue  # Coleção de fila
+queue = db.jobs  # Coleção de fila
 
 s3_client = get_r2_client(R2_KEY, R2_SECRET_KEY, ENDPOINT_URL)
 
