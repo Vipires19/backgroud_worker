@@ -1,10 +1,13 @@
 import boto3
 from botocore.client import Config
 import streamlit as st
+from dotenv import load_dotenv
+load_dotenv()
 
-R2_KEY = st.secrets['R2_KEY']
-R2_SECRET_KEY = st.secrets['R2_SECRET_KEY']
-ENDPOINT_URL = st.secrets['ENDPOINT_URL']
+R2_KEY = os.getenv("R2_KEY")
+R2_SECRET_KEY = os.getenv("R2_SECRET_KEY")
+ENDPOINT_URL = os.getenv("ENDPOINT_URL")
+BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
 
 
 def get_r2_client(R2_KEY, R2_SECRET_KEY, ENDPOINT_URL):
