@@ -44,10 +44,10 @@ while True:
         print(f"[Worker] Processando: {task['student']}")
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp:
-                ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['ref_video_key'])['Body'].read())
+                ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['ref_path'])['Body'].read())
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as exec_temp:
-                exec_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['exec_video_key'])['Body'].read())
+                exec_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['exec_path'])['Body'].read())
 
             frames_ref, landmarks_ref = extract_landmarks_from_video(ref_temp.name)
             frames_exec, landmarks_exec = extract_landmarks_from_video(exec_temp.name)
