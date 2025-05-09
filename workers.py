@@ -11,6 +11,7 @@ from utils.helpers import generate_and_upload_pdf
 from utils.openai_feedback import generate_feedback_via_openai
 from utils.r2_utils import get_r2_client
 import urllib.parse
+from urllib.parse import urlparse
 
 # Configs sensíveis (em ambiente real, use dotenv/secrets)
 from dotenv import load_dotenv
@@ -42,12 +43,25 @@ while True:
     task = queue.find_one({})  # Pega e remove da fila
     if task:
         print(f"[Worker] Processando: {task['student']}")
-        try:
+
+        
+        try:            
+            def extract_key_from_url(url):
+                if url is None:
+                    return None
+                return os.path.basename(urlparse(url).path)
+            
+            ref_key = extract_key_from_url(task.get('ref_path'))
+            exec_key = extract_key_from_url(task.get('exec_path'))
+            
+            if not ref_key or not exec_key:
+                raise ValueError("ref_path ou exec_path ausente ou inválido.")
+                
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp:
-                ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['ref_path'])['Body'].read())
+                ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=ref_key)['Body'].read())
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as exec_temp:
-                exec_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['exec_path'])['Body'].read())
+                exec_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=exec_key)['Body'].read())
 
             frames_ref, landmarks_ref = extract_landmarks_from_video(ref_temp.name)
             frames_exec, landmarks_exec = extract_landmarks_from_video(exec_temp.name)
