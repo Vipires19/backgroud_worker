@@ -49,9 +49,9 @@ while True:
     if task:
         print(f"[Worker] Processando: {task['student']}")
         ref_key = extract_key_from_url(task.get('ref_path'))
-        print(f"ref_path : {ref_key})
+        print(f"ref_path : {ref_key}")
         exec_key = extract_key_from_url(task.get('exec_path'))
-        print(f"exec_path : {exec_key})
+        print(f"exec_path : {exec_key}")
         
         if not ref_key or not exec_key:
             raise ValueError("ref_path ou exec_path ausente ou inválido.")
