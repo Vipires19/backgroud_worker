@@ -39,23 +39,22 @@ s3_client = get_r2_client(R2_KEY, R2_SECRET_KEY, ENDPOINT_URL)
 
 print("[Worker] Iniciado. Monitorando fila...")
 
+def extract_key_from_url(url):
+                if url is None:
+                    return None
+                return os.path.basename(urlparse(url).path)
+                        
 while True:
     task = queue.find_one({})  # Pega e remove da fila
     if task:
         print(f"[Worker] Processando: {task['student']}")
-
-        
-        try:            
-            def extract_key_from_url(url):
-                if url is None:
-                    return None
-                return os.path.basename(urlparse(url).path)
+        ref_key = extract_key_from_url(task.get('ref_path'))
+        exec_key = extract_key_from_url(task.get('exec_path'))
             
-            ref_key = extract_key_from_url(task.get('ref_path'))
-            exec_key = extract_key_from_url(task.get('exec_path'))
+        if not ref_key or not exec_key:
+            raise ValueError("ref_path ou exec_path ausente ou inválido.")
             
-            if not ref_key or not exec_key:
-                raise ValueError("ref_path ou exec_path ausente ou inválido.")
+        try:                       
                 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp:
                 ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=ref_key)['Body'].read())
