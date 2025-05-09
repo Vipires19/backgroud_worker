@@ -38,7 +38,7 @@ print("[Worker] Iniciado. Monitorando fila...")
 while True:
     task = queue.find_one_and_delete({})  # Pega e remove da fila
     if task:
-        print(f"[Worker] Processando: {task['student_name']}")
+        print(f"[Worker] Processando: {task['student']}")
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp:
                 ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=task['ref_video_key'])['Body'].read())
