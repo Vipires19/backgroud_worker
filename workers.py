@@ -36,7 +36,7 @@ s3_client = get_r2_client(R2_KEY, R2_SECRET_KEY, ENDPOINT_URL)
 print("[Worker] Iniciado. Monitorando fila...")
 
 while True:
-    task = queue.find_one_and_delete({})  # Pega e remove da fila
+    task = queue.find_one({})  # Pega e remove da fila
     if task:
         print(f"[Worker] Processando: {task['student']}")
         try:
@@ -80,13 +80,14 @@ while True:
                 "pdf_url": pdf_url,
                 "feedback": full_feedback,
                 "timestamp": time.time()
-            })
+            })  
 
             print(f"[Worker] Finalizado: {task['student_name']}")
 
             os.remove(ref_temp.name)
             os.remove(exec_temp.name)
             os.remove(local_pdf)
+            queue.delete_one({})
 
         except Exception as e:
             print(f"[Erro] {e}")
