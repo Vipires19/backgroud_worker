@@ -15,6 +15,8 @@ import urllib.parse
 # Configs sensíveis (em ambiente real, use dotenv/secrets)
 from dotenv import load_dotenv
 load_dotenv()
+print("[Debug] Variáveis de ambiente carregadas")
+print(f"[Debug] MONGO_USER: {MONGO_USER}")
 
 MONGO_USER = urllib.parse.quote_plus(os.getenv("MONGO_USER"))
 MONGO_PASS = urllib.parse.quote_plus(os.getenv("MONGO_PASS"))
