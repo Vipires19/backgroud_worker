@@ -57,7 +57,7 @@ def extract_key_from_url(url):
 
 # Função para processar a tarefa
 def process_task(task):
-    print(f"[Worker] Processando: {task.get('student_name', 'Desconhecido')}")
+    print(f"[Worker] Processando: {task.get('student', 'Desconhecido')}")
 
     try:
         # Obtém as chaves das URLs
