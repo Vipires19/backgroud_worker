@@ -79,17 +79,17 @@ def process_task(task):
 
         # Verifica se os arquivos existem no R2 antes de tentar fazer o download
         try:
-            s3_client.get_object(Bucket=BUCKET_NAME, Key=ref_key)
-            s3_client.get_object(Bucket=BUCKET_NAME, Key=exec_key)
+            s3_client.get_object(Bucket=R2_BUCKET, Key=ref_key)
+            s3_client.get_object(Bucket=R2_BUCKET, Key=exec_key)
         except Exception as e:
             raise ValueError(f"Erro ao verificar arquivos no R2: {e}")
 
         # Baixa os arquivos temporários a partir das URLs
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as ref_temp:
-            ref_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=ref_key)['Body'].read())
+            ref_temp.write(s3_client.get_object(Bucket=R2_BUCKET, Key=ref_key)['Body'].read())
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as exec_temp:
-            exec_temp.write(s3_client.get_object(Bucket=BUCKET_NAME, Key=exec_key)['Body'].read())
+            exec_temp.write(s3_client.get_object(Bucket=R2_BUCKET, Key=exec_key)['Body'].read())
 
         # Processa os vídeos para extrair landmarks
         frames_ref, landmarks_ref = extract_landmarks_from_video(ref_temp.name)
@@ -107,7 +107,7 @@ def process_task(task):
             frames_ref, landmarks_ref, frames_exec, landmarks_exec,
             upload_path=video_key,
             s3_client=s3_client,
-            bucket_name=BUCKET_NAME
+            bucket_name=R2_BUCKET
         )
 
         # Gera e sobe o PDF
