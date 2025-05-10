@@ -1,3 +1,4 @@
+print("[BOOT] Worker iniciado... carregando módulos")
 import time
 import os
 import tempfile
