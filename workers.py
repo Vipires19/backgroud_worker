@@ -24,7 +24,7 @@ MONGO_URI = f"mongodb+srv://{MONGO_USER}:{MONGO_PASS}@cluster0.gjkin5a.mongodb.n
 R2_KEY = os.getenv("R2_KEY")
 R2_SECRET_KEY = os.getenv("R2_SECRET_KEY")
 ENDPOINT_URL = os.getenv("ENDPOINT_URL")
-BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
+R2_BUCKET = os.getenv("R2_BUCKET")
 
 # Chave API OpenAI
 API_KEY = os.getenv("OPENAI_API_KEY")
