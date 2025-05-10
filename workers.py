@@ -11,6 +11,7 @@ from utils.r2_utils import get_r2_client
 import urllib.parse
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Carrega variáveis de ambiente
 load_dotenv()
