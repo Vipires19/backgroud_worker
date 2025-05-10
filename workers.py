@@ -75,7 +75,7 @@ def process_task(task):
         if not ref_key or not exec_key:
             raise ValueError("Não foi possível extrair a chave das URLs.")
 
-        print(f"ref_key: {ref_key},{type(ref_key} | exec_key: {exec_key}, {type(exec_key}")
+        print(f"ref_key: {ref_key},{type(ref_key)} | exec_key: {exec_key}, {type(exec_key)}")
 
         # Verifica se os arquivos existem no R2 antes de tentar fazer o download
         try:
