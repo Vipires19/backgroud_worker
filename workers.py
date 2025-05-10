@@ -75,12 +75,12 @@ def process_task(task):
         if not ref_key or not exec_key:
             raise ValueError("Não foi possível extrair a chave das URLs.")
 
-        print(f"ref_key: {ref_key}, exec_key: {exec_key}")
+        print(f"ref_key: {ref_key},{type(ref_key} | exec_key: {exec_key}, {type(exec_key}")
 
         # Verifica se os arquivos existem no R2 antes de tentar fazer o download
         try:
-            s3_client.head_object(Bucket=BUCKET_NAME, Key=ref_key)
-            s3_client.head_object(Bucket=BUCKET_NAME, Key=exec_key)
+            s3_client.head_object(Bucket=BUCKET_NAME, Key='9004baa8-73c9-4ccf-90f9-e14be43f84eb_ref.mp4')
+            s3_client.head_object(Bucket=BUCKET_NAME, Key='f92aa21e-1624-4854-aff3-01ddfd58c71e_exec.mp4')
         except Exception as e:
             raise ValueError(f"Erro ao verificar arquivos no R2: {e}")
 
