@@ -100,7 +100,7 @@ def process_task(task):
         # Gera e envia vídeo
         print("[Info] Gerando e enviando vídeo comparativo...", flush=True)
         # Gera e sobe o vídeo comparativo
-        video_key = f"comparativos/{task['student_name']}_comparativo.mp4"
+        video_key = f"comparativos/{task['student']}_comparativo.mp4"
         video_url = save_and_upload_comparative_video(
             frames_ref, landmarks_ref, frames_exec, landmarks_exec,
             upload_path=video_key,
@@ -113,7 +113,7 @@ def process_task(task):
         
         # Gera e sobe o PDF
         pdf_key = f"relatorios/{task['student_name']}_relatorio.pdf"
-        local_pdf = os.path.join("temp", f"{task['student_name']}_relatorio.pdf")
+        local_pdf = os.path.join("temp", f"{task['student']}_relatorio.pdf")
         full_feedback = generate_feedback_via_openai(avg_errors, API_KEY)
         pdf_url = generate_and_upload_pdf(
             task['student_name'], insights, avg_error, video_url,
