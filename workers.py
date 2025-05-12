@@ -116,7 +116,7 @@ def process_task(task):
         local_pdf = os.path.join("temp", f"{task['student']}_relatorio.pdf")
         full_feedback = generate_feedback_via_openai(avg_errors, API_KEY)
         generate_pdf_report(
-            student=task['student'],
+            student_name=task['student'],
             insights=insights,
             avg_error=avg_error,
             video_url=video_url,
