@@ -82,8 +82,9 @@ def process_task(task):
         print("[Info] Processando vídeos para extração de landmarks...")
         print("[Worker] Começando extração de frames...", flush=True)
         frames_ref, landmarks_ref = extract_landmarks_from_video(ref_temp.name)
-        frames_exec, landmarks_exec = extract_landmarks_from_video(exec_temp.name)
         print("[Worker] Frames de referência extraídos!", flush=True)
+        frames_exec, landmarks_exec = extract_landmarks_from_video(exec_temp.name)
+        print("[Worker] Frames de execução extraídos!", flush=True)
 
         if not frames_ref or not landmarks_ref:
             print(f"[Erro] Falha ao extrair landmarks do vídeo de referência.", flush=True)
@@ -93,11 +94,11 @@ def process_task(task):
         if not frames_ref or not landmarks_ref or not frames_exec or not landmarks_exec:
             raise ValueError("Falha na extração de landmarks")
 
-        print("[Info] Analisando poses...")
+        print("[Info] Analisando poses...", flush=True)
         insights, avg_error, avg_errors = analyze_poses(landmarks_ref, landmarks_exec)
 
         # Gera e envia vídeo
-        print("[Info] Gerando e enviando vídeo comparativo...")
+        print("[Info] Gerando e enviando vídeo comparativo...", flush=True)
         # Gera e sobe o vídeo comparativo
         video_key = f"comparativos/{task['student_name']}_comparativo.mp4"
         video_url = save_and_upload_comparative_video(
@@ -128,7 +129,7 @@ def process_task(task):
 
 
         # Atualiza job no MongoDB
-        print("[Info] Atualizando status do job no MongoDB para 'done'...")
+        print("[Info] Atualizando status do job no MongoDB para 'done'...", flush=True)
         queue.update_one(
             {"_id": task["_id"]},
             {
@@ -147,10 +148,10 @@ def process_task(task):
         os.remove(exec_temp.name)
         os.remove(local_pdf)
 
-        print(f"[Worker] ✅ Finalizado: {task['student']}")
+        print(f"[Worker] ✅ Finalizado: {task['student']}", flush=True)
 
     except Exception as e:
-        print(f"[Erro ao processar {task.get('student')}] {e}")
+        print(f"[Erro ao processar {task.get('student')}] {e}", flush=True)
         traceback.print_exc()
         queue.update_one(
             {"_id": task["_id"]},
