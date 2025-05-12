@@ -64,23 +64,26 @@ def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks
 def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec, upload_path, s3_client, bucket_name):
     print("[UPLOAD] Iniciando geração do vídeo comparativo...")
 
-    video_bytes = generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
+    # Gera o vídeo e salva no disco
+    video_path = generate_comparative_video_to_file(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
 
-    if not video_bytes:
-        print("[ERRO] Vídeo não foi gerado. Bytes estão vazios.")
+    if not os.path.exists(video_path):
+        print("[ERRO] Vídeo não foi gerado no caminho esperado.")
         return None
 
-    print(f"[UPLOAD] Tamanho do vídeo gerado: {len(video_bytes)} bytes")
+    print(f"[UPLOAD] Enviando vídeo: {video_path}")
 
     try:
-        s3_client.put_object(
+        s3_client.upload_file(
+            Filename=video_path,
             Bucket=bucket_name,
             Key=upload_path,
-            Body=video_bytes,
-            ContentType='video/mp4'
+            ExtraArgs={"ContentType": "video/mp4"}
         )
         print(f"[UPLOAD] Vídeo enviado com sucesso para {upload_path}")
+        os.remove(video_path)
         return f"{upload_path}"
     except Exception as e:
         print(f"[ERRO] Falha ao subir vídeo para R2: {e}")
         return None
+
