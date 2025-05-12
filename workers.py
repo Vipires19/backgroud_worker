@@ -98,7 +98,7 @@ def process_task(task):
 
         # Gera e envia vídeo
         print("[Info] Gerando e enviando vídeo comparativo...")
-        video_key = f"comparativos/{task['student_name']}_comparativo.mp4"
+        video_key = f"comparativos/{task['student']}_comparativo.mp4"
         video_url = save_and_upload_comparative_video(
             frames_ref, landmarks_ref, frames_exec, landmarks_exec,
             upload_path=video_key,
