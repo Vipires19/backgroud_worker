@@ -4,6 +4,7 @@ import mediapipe as mp
 import os
 import tempfile
 from mediapipe.framework.formats import landmark_pb2
+from moviepy.editor import ImageSequenceClip
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
@@ -21,20 +22,14 @@ def draw_landmarks_on_frame(frame, landmarks_list):
     return frame
 
 def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec):
-    if len(frames_ref) == 0 or len(frames_exec) == 0:
+    if not frames_ref or not frames_exec:
         return None
 
     target_width = 480
     target_height = 270
     min_frames = max(len(frames_ref), len(frames_exec))
 
-    # Cria arquivo temporário seguro
-    temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-    temp_output_path = temp_file.name
-    temp_file.close()
-
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(temp_output_path, fourcc, 30.0, (target_width * 2, target_height))
+    combined_frames = []
 
     for i in range(min_frames):
         frame_ref = frames_ref[i] if i < len(frames_ref) else frames_ref[-1]
@@ -49,9 +44,16 @@ def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks
         frame_exec = cv2.resize(frame_exec, (target_width, target_height))
 
         combined = np.hstack((frame_ref, frame_exec))
-        out.write(combined)
+        combined_rgb = cv2.cvtColor(combined, cv2.COLOR_BGR2RGB)  # Conversão crítica
+        combined_frames.append(combined_rgb)
 
-    out.release()
+    # Usa moviepy para gerar vídeo .mp4 com codec H.264 #(mais compatível)
+    clip = ImageSequenceClip(combined_frames, fps=30)
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    temp_output_path = temp_file.name
+    temp_file.close()
+
+    clip.write_videofile(temp_output_path, codec="libx264", audio=False, bitrate="800k", logger=None)
 
     with open(temp_output_path, "rb") as f:
         video_bytes = f.read()
@@ -63,7 +65,7 @@ def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, la
     print("[UPLOAD] Iniciando geração do vídeo comparativo...")
 
     video_bytes = generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
-    
+
     if not video_bytes:
         print("[ERRO] Vídeo não foi gerado. Bytes estão vazios.")
         return None
@@ -75,8 +77,7 @@ def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, la
             Bucket=bucket_name,
             Key=upload_path,
             Body=video_bytes,
-            ContentType='video/mp4',
-            #ACL='public-read'  # <-- só se seu bucket permitir isso
+            ContentType='video/mp4'
         )
         print(f"[UPLOAD] Vídeo enviado com sucesso para {upload_path}")
         return f"{upload_path}"
