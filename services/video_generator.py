@@ -22,44 +22,55 @@ def draw_landmarks_on_frame(frame, landmarks_list):
     return frame
 
 def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec):
-    if not frames_ref or not frames_exec:
+    if len(frames_ref) == 0 or len(frames_exec) == 0:
+        print("[ERRO] Lista de frames vazia.")
         return None
 
     target_width = 480
     target_height = 270
     min_frames = max(len(frames_ref), len(frames_exec))
 
-    combined_frames = []
-
-    for i in range(min_frames):
-        frame_ref = frames_ref[i] if i < len(frames_ref) else frames_ref[-1]
-        frame_exec = frames_exec[i] if i < len(frames_exec) else frames_exec[-1]
-        landmark_ref = landmarks_ref[i] if i < len(landmarks_ref) else landmarks_ref[-1]
-        landmark_exec = landmarks_exec[i] if i < len(landmarks_exec) else landmarks_exec[-1]
-
-        frame_ref = draw_landmarks_on_frame(frame_ref.copy(), landmark_ref)
-        frame_exec = draw_landmarks_on_frame(frame_exec.copy(), landmark_exec)
-
-        frame_ref = cv2.resize(frame_ref, (target_width, target_height))
-        frame_exec = cv2.resize(frame_exec, (target_width, target_height))
-
-        combined = np.hstack((frame_ref, frame_exec))
-        combined_rgb = cv2.cvtColor(combined, cv2.COLOR_BGR2RGB)  # Conversão crítica
-        combined_frames.append(combined_rgb)
-
-    # Usa moviepy para gerar vídeo .mp4 com codec H.264 #(mais compatível)
-    clip = ImageSequenceClip(combined_frames, fps=30)
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
     temp_output_path = temp_file.name
     temp_file.close()
 
-    clip.write_videofile(temp_output_path, codec="libx264", audio=False, bitrate="800k", logger=None)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(temp_output_path, fourcc, 30.0, (target_width * 2, target_height))
 
-    with open(temp_output_path, "rb") as f:
-        video_bytes = f.read()
+    for i in range(min_frames):
+        try:
+            frame_ref = frames_ref[i] if i < len(frames_ref) else frames_ref[-1]
+            frame_exec = frames_exec[i] if i < len(frames_exec) else frames_exec[-1]
+            landmark_ref = landmarks_ref[i] if i < len(landmarks_ref) else landmarks_ref[-1]
+            landmark_exec = landmarks_exec[i] if i < len(landmarks_exec) else landmarks_exec[-1]
 
-    os.remove(temp_output_path)
-    return video_bytes
+            frame_ref = draw_landmarks_on_frame(frame_ref.copy(), landmark_ref)
+            frame_exec = draw_landmarks_on_frame(frame_exec.copy(), landmark_exec)
+
+            frame_ref = cv2.resize(frame_ref, (target_width, target_height))
+            frame_exec = cv2.resize(frame_exec, (target_width, target_height))
+
+            combined = np.hstack((frame_ref, frame_exec))
+            print("[ERRO] Gerando frames...", flush=True)
+            out.write(combined)
+        except Exception as e:
+            print(f"[ERRO] Erro ao processar frame {i}: {e}", flush=True)
+
+    out.release()
+
+    if not os.path.exists(temp_output_path):
+        print("[ERRO] Vídeo não foi gerado no caminho esperado.")
+        return None
+
+    try:
+        with open(temp_output_path, "rb") as f:
+            video_bytes = f.read()
+        os.remove(temp_output_path)
+        return video_bytes
+    except Exception as e:
+        print(f"[ERRO] Falha ao ler ou apagar o vídeo gerado: {e}")
+        return None
+
 
 def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec, upload_path, s3_client, bucket_name):
     print("[UPLOAD] Iniciando geração do vídeo comparativo...")
