@@ -20,27 +20,17 @@ def draw_landmarks_on_frame(frame, landmarks_list):
         )
     return frame
 
+from moviepy.editor import ImageSequenceClip
+
 def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec):
-    if not frames_ref or not frames_exec:
-        print("[ERRO] Lista de frames vazia.", flush=True)
+    if len(frames_ref) == 0 or len(frames_exec) == 0:
+        print("[ERRO] Lista de frames vazia.")
         return None
 
     target_width = 480
     target_height = 270
     min_frames = max(len(frames_ref), len(frames_exec))
-
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-    video_path = temp_file.name
-    temp_file.close()
-
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_path, fourcc, 30.0, (target_width * 2, target_height))
-
-    if not out.isOpened():
-        print(f"[ERRO] VideoWriter não abriu corretamente para {video_path}", flush=True)
-        return None
-
-    print(f"[INFO] Iniciando gravação no arquivo: {video_path}", flush=True)
+    combined_frames = []
 
     for i in range(min_frames):
         try:
@@ -56,18 +46,37 @@ def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks
             frame_exec = cv2.resize(frame_exec, (target_width, target_height))
 
             combined = np.hstack((frame_ref, frame_exec))
-            out.write(combined)
+            combined_rgb = cv2.cvtColor(combined, cv2.COLOR_BGR2RGB)
+            combined_frames.append(combined_rgb)
         except Exception as e:
-            print(f"[ERRO] Erro ao processar frame {i}: {e}", flush=True)
+            print(f"[ERRO] Erro ao processar frame {i}: {e}")
 
-    out.release()
+    # Cria arquivo temporário seguro
+    temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+    temp_output_path = temp_file.name
+    temp_file.close()
 
-    if not os.path.exists(video_path) or os.path.getsize(video_path) < 1000:
-        print(f"[ERRO] Vídeo não foi salvo corretamente em {video_path}", flush=True)
+    try:
+        print(f"[INFO] Gerando vídeo com MoviePy: {temp_output_path}")
+        clip = ImageSequenceClip(combined_frames, fps=30)
+        clip.write_videofile(temp_output_path, codec="libx264", audio=False, logger=None)
+        print(f"[INFO] Vídeo gerado com sucesso: {temp_output_path}")
+    except Exception as e:
+        print(f"[ERRO] Falha ao gerar vídeo com MoviePy: {e}")
         return None
 
-    print(f"[INFO] Vídeo salvo em {video_path} ({os.path.getsize(video_path)} bytes)", flush=True)
-    return video_path
+    if not os.path.exists(temp_output_path):
+        print("[ERRO] Vídeo não foi gerado no caminho esperado.")
+        return None
+
+    try:
+        with open(temp_output_path, "rb") as f:
+            video_bytes = f.read()
+        os.remove(temp_output_path)
+        return video_bytes
+    except Exception as e:
+        print(f"[ERRO] Falha ao ler ou apagar o vídeo gerado: {e}")
+        return None
 
 def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec, upload_path, s3_client, bucket_name):
     print("[UPLOAD] Iniciando geração do vídeo comparativo...", flush=True)
