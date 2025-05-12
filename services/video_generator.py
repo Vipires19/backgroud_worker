@@ -4,7 +4,6 @@ import mediapipe as mp
 import os
 import tempfile
 from mediapipe.framework.formats import landmark_pb2
-from moviepy.editor import ImageSequenceClip
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
@@ -22,20 +21,26 @@ def draw_landmarks_on_frame(frame, landmarks_list):
     return frame
 
 def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec):
-    if len(frames_ref) == 0 or len(frames_exec) == 0:
-        print("[ERRO] Lista de frames vazia.")
+    if not frames_ref or not frames_exec:
+        print("[ERRO] Lista de frames vazia.", flush=True)
         return None
 
     target_width = 480
     target_height = 270
     min_frames = max(len(frames_ref), len(frames_exec))
 
-    temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-    temp_output_path = temp_file.name
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    video_path = temp_file.name
     temp_file.close()
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(temp_output_path, fourcc, 30.0, (target_width * 2, target_height))
+    out = cv2.VideoWriter(video_path, fourcc, 30.0, (target_width * 2, target_height))
+
+    if not out.isOpened():
+        print(f"[ERRO] VideoWriter não abriu corretamente para {video_path}", flush=True)
+        return None
+
+    print(f"[INFO] Iniciando gravação no arquivo: {video_path}", flush=True)
 
     for i in range(min_frames):
         try:
@@ -51,38 +56,27 @@ def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks
             frame_exec = cv2.resize(frame_exec, (target_width, target_height))
 
             combined = np.hstack((frame_ref, frame_exec))
-            print("[ERRO] Gerando frames...", flush=True)
             out.write(combined)
         except Exception as e:
             print(f"[ERRO] Erro ao processar frame {i}: {e}", flush=True)
 
     out.release()
 
-    if not os.path.exists(temp_output_path):
-        print("[ERRO] Vídeo não foi gerado no caminho esperado.")
+    if not os.path.exists(video_path) or os.path.getsize(video_path) < 1000:
+        print(f"[ERRO] Vídeo não foi salvo corretamente em {video_path}", flush=True)
         return None
 
-    try:
-        with open(temp_output_path, "rb") as f:
-            video_bytes = f.read()
-        os.remove(temp_output_path)
-        return video_bytes
-    except Exception as e:
-        print(f"[ERRO] Falha ao ler ou apagar o vídeo gerado: {e}")
-        return None
-
+    print(f"[INFO] Vídeo salvo em {video_path} ({os.path.getsize(video_path)} bytes)", flush=True)
+    return video_path
 
 def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec, upload_path, s3_client, bucket_name):
-    print("[UPLOAD] Iniciando geração do vídeo comparativo...")
+    print("[UPLOAD] Iniciando geração do vídeo comparativo...", flush=True)
 
-    # Gera o vídeo e salva no disco
     video_path = generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
 
-    if not os.path.exists(video_path):
-        print("[ERRO] Vídeo não foi gerado no caminho esperado.")
+    if not video_path:
+        print("[ERRO] Vídeo não foi gerado no caminho esperado.", flush=True)
         return None
-
-    print(f"[UPLOAD] Enviando vídeo: {video_path}")
 
     try:
         s3_client.upload_file(
@@ -91,10 +85,9 @@ def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, la
             Key=upload_path,
             ExtraArgs={"ContentType": "video/mp4"}
         )
-        print(f"[UPLOAD] Vídeo enviado com sucesso para {upload_path}")
+        print(f"[UPLOAD] Vídeo enviado com sucesso para {upload_path}", flush=True)
         os.remove(video_path)
-        return f"{upload_path}"
+        return upload_path
     except Exception as e:
-        print(f"[ERRO] Falha ao subir vídeo para R2: {e}")
+        print(f"[ERRO] Falha ao subir vídeo para R2: {e}", flush=True)
         return None
-
