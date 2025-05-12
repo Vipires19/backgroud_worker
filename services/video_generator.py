@@ -65,7 +65,7 @@ def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, la
     print("[UPLOAD] Iniciando geração do vídeo comparativo...")
 
     # Gera o vídeo e salva no disco
-    video_path = generate_comparative_video_to_file(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
+    video_path = generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
 
     if not os.path.exists(video_path):
         print("[ERRO] Vídeo não foi gerado no caminho esperado.")
