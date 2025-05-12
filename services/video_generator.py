@@ -81,22 +81,31 @@ def generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks
 def save_and_upload_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec, upload_path, s3_client, bucket_name):
     print("[UPLOAD] Iniciando geração do vídeo comparativo...", flush=True)
 
-    video_path = generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
+    video_bytes = generate_comparative_video(frames_ref, landmarks_ref, frames_exec, landmarks_exec)
 
-    if not video_path:
-        print("[ERRO] Vídeo não foi gerado no caminho esperado.", flush=True)
+    if not video_bytes:
+        print("[ERRO] Vídeo não foi gerado corretamente.", flush=True)
         return None
 
     try:
+        # Cria um arquivo temporário para armazenar os bytes
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_file:
+            temp_file.write(video_bytes)  # Escreve os bytes no arquivo temporário
+            temp_file_path = temp_file.name  # Obtém o caminho do arquivo temporário
+
+        # Agora, use o caminho do arquivo temporário para o upload
         s3_client.upload_file(
-            Filename=video_path,
+            Filename=temp_file_path,  # Caminho do arquivo temporário
             Bucket=bucket_name,
             Key=upload_path,
             ExtraArgs={"ContentType": "video/mp4"}
         )
         print(f"[UPLOAD] Vídeo enviado com sucesso para {upload_path}", flush=True)
-        os.remove(video_path)
+
+        os.remove(temp_file_path)  # Remove o arquivo temporário após o upload
         return upload_path
+
     except Exception as e:
         print(f"[ERRO] Falha ao subir vídeo para R2: {e}", flush=True)
         return None
+
