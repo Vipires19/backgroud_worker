@@ -112,11 +112,11 @@ def process_task(task):
             raise ValueError("Falha ao gerar ou enviar vídeo comparativo para o R2.")
         
         # Gera e sobe o PDF
-        pdf_key = f"relatorios/{task['student_name']}_relatorio.pdf"
+        pdf_key = f"relatorios/{task['student']}_relatorio.pdf"
         local_pdf = os.path.join("temp", f"{task['student']}_relatorio.pdf")
         full_feedback = generate_feedback_via_openai(avg_errors, API_KEY)
         pdf_url = generate_and_upload_pdf(
-            task['student_name'], insights, avg_error, video_url,
+            task['student'], insights, avg_error, video_url,
             output_path_local=local_pdf,
             output_path_r2=pdf_key,
             s3_client=s3_client,
