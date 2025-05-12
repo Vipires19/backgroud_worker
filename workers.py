@@ -12,7 +12,7 @@ import traceback
 from services.pose_extractor import extract_landmarks_from_video
 from services.pose_analyzer import analyze_poses
 from services.video_generator import save_and_upload_comparative_video
-from utils.helpers import generate_and_upload_pdf
+from utils.helpers import generate_pdf_report
 from utils.openai_feedback import generate_feedback_via_openai
 from utils.r2_utils import get_r2_client
 
