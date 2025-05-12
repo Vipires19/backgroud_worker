@@ -79,13 +79,15 @@ def process_task(task):
 
         # Processamento com MediaPipe
         print("[Info] Processando vídeos para extração de landmarks...")
+        print("[Worker] Começando extração de frames...", flush=True)
         frames_ref, landmarks_ref = extract_landmarks_from_video(ref_temp.name)
         frames_exec, landmarks_exec = extract_landmarks_from_video(exec_temp.name)
+        print("[Worker] Frames de referência extraídos!", flush=True)
 
         if not frames_ref or not landmarks_ref:
-            print(f"[Erro] Falha ao extrair landmarks do vídeo de referência.")
+            print(f"[Erro] Falha ao extrair landmarks do vídeo de referência.", flush=True)
         if not frames_exec or not landmarks_exec:
-            print(f"[Erro] Falha ao extrair landmarks do vídeo de execução.")
+            print(f"[Erro] Falha ao extrair landmarks do vídeo de execução.", flush=True)
 
         if not frames_ref or not landmarks_ref or not frames_exec or not landmarks_exec:
             raise ValueError("Falha na extração de landmarks")
