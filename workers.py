@@ -12,7 +12,7 @@ import traceback
 from services.pose_extractor import extract_landmarks_from_video
 from services.pose_analyzer import analyze_poses
 from services.video_generator import save_and_upload_comparative_video
-from utils.helpers import generate_pdf_report
+from utils.helpers import generate_and_upload_pdf
 from utils.openai_feedback import generate_feedback_via_openai
 from utils.r2_utils import get_r2_client
 
@@ -99,7 +99,6 @@ def process_task(task):
 
         # Gera e envia vídeo
         print("[Info] Gerando e enviando vídeo comparativo...", flush=True)
-        # Gera e sobe o vídeo comparativo
         video_key = f"comparativos/{task['student']}_comparativo.mp4"
         video_url = save_and_upload_comparative_video(
             frames_ref, landmarks_ref, frames_exec, landmarks_exec,
@@ -111,35 +110,25 @@ def process_task(task):
         if not video_url:
             raise ValueError("Falha ao gerar ou enviar vídeo comparativo para o R2.")
         
-        # Gera e sobe o PDF
+        # Gera e envia PDF
+        print("[Info] Gerando e enviando PDF...", flush=True)
         pdf_key = f"relatorios/{task['student']}_relatorio.pdf"
-        local_pdf = os.path.join("temp", f"{task['student']}_relatorio.pdf")
+        local_pdf_path = os.path.join("temp", f"{task['student']}_relatorio.pdf")
         full_feedback = generate_feedback_via_openai(avg_errors, API_KEY)
-        generate_pdf_report(
+        pdf_url = generate_and_upload_pdf(
             student_name=task['student'],
             insights=insights,
             avg_error=avg_error,
             video_url=video_url,
-            output_path=local_pdf,
+            output_path_local=local_pdf_path,
+            output_path_r2=pdf_key,
+            s3_client=s3_client,
+            bucket_name=R2_BUCKET,
             full_feedback=full_feedback
         )
-        
-        # Agora sim faz o upload após gerar
-        with open(local_pdf, "rb") as f:
-            pdf_bytes = f.read()
-        
-        s3_client.put_object(
-            Bucket=R2_BUCKET,
-            Key=pdf_key,
-            Body=pdf_bytes,
-            ContentType='application/pdf'
-        )
-        
-        pdf_url = f"{pdf_key}"
-        
+
         if not pdf_url:
             raise ValueError("Falha ao gerar ou enviar o PDF para o R2.")
-
 
         # Atualiza job no MongoDB
         print("[Info] Atualizando status do job no MongoDB para 'done'...", flush=True)
@@ -159,7 +148,7 @@ def process_task(task):
         # Limpeza de arquivos temporários
         os.remove(ref_temp.name)
         os.remove(exec_temp.name)
-        os.remove(local_pdf)
+        os.remove(local_pdf_path)
 
         print(f"[Worker] ✅ Finalizado: {task['student']}", flush=True)
 
