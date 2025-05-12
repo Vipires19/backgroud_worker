@@ -115,16 +115,27 @@ def process_task(task):
         pdf_key = f"relatorios/{task['student']}_relatorio.pdf"
         local_pdf = os.path.join("temp", f"{task['student']}_relatorio.pdf")
         full_feedback = generate_feedback_via_openai(avg_errors, API_KEY)
-        pdf_url = generate_and_upload_pdf(
-            student_name=task['student'],
+        generate_pdf_report(
+            student_name=task['student_name'],
             insights=insights,
             avg_error=avg_error,
             video_url=video_url,
-            output_path_local=local_pdf,
-            output_path_r2=pdf_key,
-            s3_client=s3_client,
-            bucket_name=R2_BUCKET,
+            output_path=local_pdf,
             full_feedback=full_feedback
+        )
+        
+        # Agora sim faz o upload após gerar
+        with open(local_pdf, "rb") as f:
+            pdf_bytes = f.read()
+        
+        s3_client.put_object(
+            Bucket=R2_BUCKET,
+            Key=pdf_key,
+            Body=pdf_bytes,
+            ContentType='application/pdf'
+        )
+        
+        pdf_url = f"{pdf_key}"
         
         if not pdf_url:
             raise ValueError("Falha ao gerar ou enviar o PDF para o R2.")
