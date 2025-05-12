@@ -7,6 +7,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 from pymongo import MongoClient
+import traceback
 
 from services.pose_extractor import extract_landmarks_from_video
 from services.pose_analyzer import analyze_poses
@@ -146,6 +147,7 @@ def process_task(task):
 
     except Exception as e:
         print(f"[Erro ao processar {task.get('student')}] {e}")
+        traceback.print_exc()
         queue.update_one(
             {"_id": task["_id"]},
             {"$set": {"status": "error", "error_message": str(e), "processed_at": datetime.utcnow()}}
