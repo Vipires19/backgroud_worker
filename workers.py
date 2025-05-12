@@ -108,7 +108,7 @@ def process_task(task):
 
         # Gera e envia PDF
         print("[Info] Gerando relatório e enviando PDF...")
-        pdf_key = f"relatorios/{task['student_name']}_relatorio.pdf"
+        pdf_key = f"relatorios/{task['student']}_relatorio.pdf"
         os.makedirs("temp", exist_ok=True)
         local_pdf = os.path.join("temp", f"{task['student_name']}_relatorio.pdf")
         full_feedback = generate_feedback_via_openai(avg_errors, API_KEY)
