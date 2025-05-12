@@ -143,7 +143,7 @@ def process_task(task):
         os.remove(exec_temp.name)
         os.remove(local_pdf)
 
-        print(f"[Worker] ✅ Finalizado: {task['student_name']}")
+        print(f"[Worker] ✅ Finalizado: {task['student']}")
 
     except Exception as e:
         print(f"[Erro ao processar {task.get('student')}] {e}")
